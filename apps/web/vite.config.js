@@ -7,6 +7,7 @@ export default defineConfig({
     vue(),
     tailwindcss(),
   ],
+  base: '/SFA/',
   server: {
     proxy: {
       '/api': {
