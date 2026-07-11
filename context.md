@@ -15,7 +15,7 @@
 | **Tanggal Mulai** | 2026-06-28 |
 | **Target Rilis MVP** | TBD |
 | **Tim** | TBD |
-| **Repositori** | TBD |
+| **Repositori** | https://github.com/Jeffrey-Herly/SFA |
 
 ### Deskripsi Singkat
 Sistem **Sales Force Automation (SFA)** adalah platform digital yang dirancang untuk membantu tim penjualan dalam melakukan **pencatatan aktivitas**, **tracking pipeline penjualan**, dan **otomisasi pekerjaan rutin** — sehingga tenaga penjualan dapat fokus pada hal yang paling penting: menutup deal.
