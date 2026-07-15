@@ -87,7 +87,11 @@ api.interceptors.response.use(
         // Force logout and redirect if refresh token is expired or invalid
         const authStore = useAuthStore();
         authStore.clearAuth();
-        window.location.href = '/login'; 
+        
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login')) {
+          window.location.href = (import.meta.env.BASE_URL || '/') + 'login'; 
+        }
         return Promise.reject(refreshError);
       }
     }

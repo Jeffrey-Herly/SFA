@@ -1,5 +1,6 @@
 import prisma from '../../config/db';
 import { Order, OrderItem, OrderStatus, Prisma } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface OrderFilters {
   status?: OrderStatus;
@@ -8,6 +9,7 @@ export interface OrderFilters {
 }
 
 export class OrdersService {
+  private notificationsService = new NotificationsService();
   /**
    * Retrieves a paginated list of orders.
    * sales_rep users can only view their own orders.
@@ -236,7 +238,9 @@ export class OrdersService {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.status) updateData.status = data.status;
 
-    return prisma.$transaction(async (tx) => {
+    const oldStatus = existing.status;
+
+    const result = await prisma.$transaction(async (tx) => {
       // If items are modified, recalculate amount and replace order items
       if (data.items) {
         if (data.items.length === 0) {
@@ -289,33 +293,90 @@ export class OrdersService {
         },
       });
     });
+
+    if (result && oldStatus === OrderStatus.draft && result.status === OrderStatus.submitted) {
+      try {
+        const salesperson = await prisma.user.findUnique({ where: { id: result.salesperson_id } });
+        const managers = await prisma.user.findMany({ where: { role: 'sales_manager' } });
+
+        await this.notificationsService.createNotification({
+          userId: result.salesperson_id,
+          title: 'Order Submitted',
+          message: `Your draft order ${result.order_number} has been submitted for manager approval.`,
+          type: 'order_submitted',
+          email: salesperson?.email,
+        });
+
+        for (const m of managers) {
+          await this.notificationsService.createNotification({
+            userId: m.id,
+            title: 'New Order Awaiting Approval',
+            message: `Sales Rep ${salesperson?.name || 'unknown'} has submitted Sales Order ${result.order_number} of value ${result.total_amount} IDR.`,
+            type: 'order_submitted',
+            email: m.email,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to trigger order submission notifications:', err);
+      }
+    }
+
+    return result;
   }
 
   /**
    * Manager actions: approve or cancel an order
    */
   async approve(id: string): Promise<Order> {
-    return prisma.order.update({
+    const result = await prisma.order.update({
       where: { id },
       data: { status: OrderStatus.approved },
       include: {
         items: true,
         account: { select: { company_name: true } },
-        salesperson: { select: { name: true } },
+        salesperson: { select: { name: true, email: true } },
       },
     });
+
+    try {
+      await this.notificationsService.createNotification({
+        userId: result.salesperson_id,
+        title: 'Order Approved',
+        message: `Your Sales Order ${result.order_number} has been APPROVED by the Sales Manager.`,
+        type: 'order_approved',
+        email: result.salesperson.email,
+      });
+    } catch (err) {
+      console.error('Failed to trigger order approval notification:', err);
+    }
+
+    return result;
   }
 
   async cancel(id: string): Promise<Order> {
-    return prisma.order.update({
+    const result = await prisma.order.update({
       where: { id },
       data: { status: OrderStatus.cancelled },
       include: {
         items: true,
         account: { select: { company_name: true } },
-        salesperson: { select: { name: true } },
+        salesperson: { select: { name: true, email: true } },
       },
     });
+
+    try {
+      await this.notificationsService.createNotification({
+        userId: result.salesperson_id,
+        title: 'Order Cancelled',
+        message: `Your Sales Order ${result.order_number} has been CANCELLED/REJECTED by the Sales Manager.`,
+        type: 'order_cancelled',
+        email: result.salesperson.email,
+      });
+    } catch (err) {
+      console.error('Failed to trigger order cancellation notification:', err);
+    }
+
+    return result;
   }
 
   /**
