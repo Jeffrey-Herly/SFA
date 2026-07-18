@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import Sidebar from './components/layout/Sidebar.vue'
 import Header from './components/layout/Header.vue'
 
-// Basic state for mobile sidebar toggle if needed later
 const isSidebarOpen = ref(false)
+const route = useRoute()
 </script>
 
 <template>
-  <div class="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
+  <div v-if="route.path === '/login'" class="h-screen w-screen overflow-hidden bg-slate-950">
+    <router-view />
+  </div>
+  <div v-else class="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
     <!-- Sidebar -->
     <Sidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
     
