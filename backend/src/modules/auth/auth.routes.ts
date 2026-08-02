@@ -1,27 +1,32 @@
 import { Router } from 'express';
-import { AuthController } from './auth.controller';
-import { authMiddleware } from '../../common/middlewares/auth.middleware';
-import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
+import { register, login, logout, verifyEmail } from './auth.controller';
+import { validateRequest } from '../middleware/validate.middleware';
+import { authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
-const authController = new AuthController();
 
-// Rate limiting for login (A04 OWASP Mitigation: max 5 requests per minute per IP)
-const loginLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5,
-  message: {
-    error: 'Too Many Requests',
-    message: 'Too many login attempts. Please try again after 1 minute.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
+// Zod Schemas
+const registerSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    role: z.enum(['sales_rep', 'sales_manager', 'admin', 'executive']),
+  }),
 });
 
-// Authentication Routes
-router.post('/login', loginLimiter, authController.login);
-router.post('/logout', authMiddleware, authController.logout);
-router.post('/refresh', authController.refresh);
-router.get('/me', authMiddleware, authController.me);
+const loginSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(1, 'Password is required'),
+  }),
+});
+
+// Routes
+router.post('/register', authLimiter, validateRequest(registerSchema), register);
+router.post('/login', authLimiter, validateRequest(loginSchema), login);
+router.get('/verify-email/:token', verifyEmail);
+router.post('/logout', logout);
 
 export default router;

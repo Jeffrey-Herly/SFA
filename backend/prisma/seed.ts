@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient, Role, LeadStatus, LeadSource, OpportunityStage, ActivityType, OrderStatus, TargetPeriod } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -9,7 +10,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🔄 Cleaning database...');
-  
+
   // Deleting records in reverse relation order
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();

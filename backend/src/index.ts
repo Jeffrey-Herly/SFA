@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { globalLimiter } from './modules/middleware/rateLimiter';
-import authRoutes from './modules/routes/auth.routes';
+import authRoutes from './modules/auth/auth.routes';
 import accountRoutes from './modules/master-data/accounts/accounts.routes';
 import contactRoutes from './modules/master-data/contacts/contacts.routes';
 import userRoutes from './modules/master-data/users/users.routes';

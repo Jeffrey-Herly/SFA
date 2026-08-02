@@ -40,6 +40,8 @@ export class UsersService {
           name: true,
           email: true,
           role: true,
+          is_verified: true,
+          verification_token: true,
           created_at: true,
         },
       }),
@@ -65,6 +67,8 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        is_verified: true,
+        verification_token: true,
         created_at: true,
       },
     });
@@ -100,6 +104,8 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        is_verified: true,
+        verification_token: true,
         created_at: true,
       },
     });
@@ -149,6 +155,8 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        is_verified: true,
+        verification_token: true,
         created_at: true,
       },
     });
@@ -165,6 +173,8 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        is_verified: true,
+        verification_token: true,
         created_at: true,
       },
     });
